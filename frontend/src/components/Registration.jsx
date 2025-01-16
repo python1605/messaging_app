@@ -1,18 +1,23 @@
-// src/components/Register.jsx
 import React, { useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useHistory } from "react-router-dom"; // Import useHistory hook for navigation
+import callAxios from "../API/callAxios";
 
 const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
-    username: "",
+    userName: "",
     email: "",
     password: "",
   });
 
   const [errors, setErrors] = useState({
-    usernameError: "",
+    userNameError: "",
     formError: "",
   });
+
+  const history = useHistory(); // Initialize history here
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,25 +27,40 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Reset errors before checking
-    setErrors({ usernameError: "", formError: "" });
+    setErrors({ userNameError: "", formError: "" });
 
     // Basic validation for required fields
-    if (!formData.name || !formData.username || !formData.password) {
+    if (!formData.name || !formData.userName || !formData.password) {
       setErrors({ formError: "All fields except email are required" });
       return;
     }
 
-    // Mock username uniqueness check
-    if (formData.username === "existingUsername") {
-      setErrors({ usernameError: "Username is already taken" });
+    // Mock userName uniqueness check
+    if (formData.userName === "existinguserName") {
+      setErrors({ userNameError: "userName is already taken" });
     } else {
-      setErrors({ usernameError: "" });
-      // Here, you would send the form data to your API for actual registration
-      console.log("Form submitted:", formData);
+      setErrors({ userNameError: "" });
+
+      try {
+        const response = await callAxios(
+          "post",
+          "users/register",
+          JSON.stringify(formData)
+        );
+
+        if (response?.success === true) {
+          toast.success(response.message);
+          history.push("/");
+        } else {
+          toast.warning(response?.message);
+        }
+      } catch (error) {
+        toast.error(error.message);
+      }
     }
   };
 
@@ -65,15 +85,15 @@ const Register = () => {
           <label className='block text-left mb-2'>Username</label>
           <input
             type='text'
-            name='username'
-            value={formData.username}
+            name='userName'
+            value={formData.userName}
             onChange={handleChange}
-            placeholder='Choose a unique username'
+            placeholder='Choose a unique userName'
             className='w-full px-4 py-2 border border-gray-300 rounded-md'
             required
           />
-          {errors.usernameError && (
-            <p className='text-red-500 text-sm'>{errors.usernameError}</p>
+          {errors.userNameError && (
+            <p className='text-red-500 text-sm'>{errors.userNameError}</p>
           )}
         </div>
 

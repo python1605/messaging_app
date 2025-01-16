@@ -1,15 +1,17 @@
-// src/components/Login.jsx
 import React, { useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useHistory } from "react-router-dom";
+import callAxios from "../API/callAxios";
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    username: "",
+    userName: "",
     password: "",
   });
 
-  const [errors, setErrors] = useState({
-    formError: "",
-  });
+  const [errors, setErrors] = useState({ formError: "" });
+  const history = useHistory();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,23 +21,37 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     setErrors({ formError: "" });
 
-    // Basic validation for required fields
-    if (!formData.username || !formData.password) {
-      setErrors({ formError: "Username and Password are required" });
+    if (!formData.userName || !formData.password) {
+      setErrors({ formError: "userName and Password are required" });
       return;
     }
 
-    // Mock login validation (you can replace this with an API call)
-    if (formData.username === "user" && formData.password === "password123") {
-      console.log("Login successful");
-      // You would typically redirect the user here or store authentication tokens
-    } else {
-      setErrors({ formError: "Invalid username or password" });
+    try {
+      const response = await callAxios(
+        "post",
+        "users/login",
+        JSON.stringify(formData)
+      );
+
+      if (response?.success) {
+        toast.success("Login successful!");
+
+        // Store token in localStorage
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+
+        // Redirect to the home page
+        history.push("/chat-window");
+      } else {
+        toast.warning(response?.message || "Login failed");
+      }
+    } catch (error) {
+      toast.error(error.message || "An error occurred during login");
     }
   };
 
@@ -47,10 +63,10 @@ const Login = () => {
           <label className='block text-left mb-2'>Username</label>
           <input
             type='text'
-            name='username'
-            value={formData.username}
+            name='userName'
+            value={formData.userName}
             onChange={handleChange}
-            placeholder='Enter your username'
+            placeholder='Enter your userName'
             className='w-full px-4 py-2 border border-gray-300 rounded-md'
             required
           />
